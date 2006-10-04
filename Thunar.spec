@@ -1,7 +1,7 @@
 Summary: Thunar File Manager
 Name: Thunar
 Version: 0.4.0
-Release: 0.5.rc1%{?dist}
+Release: 0.6.rc1%{?dist}
 License: GPL
 URL: http://thunar.xfce.org/
 Source0: http://www.xfce.org/archive/xfce-4.3.99.1/src/Thunar-0.4.0rc1.tar.bz2
@@ -163,6 +163,9 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Thu Oct 05 2006 Christian Iseli <Christian.Iseli@licr.org> - 0.4.0-0.6.rc1
+ - rebuilt for unwind info generation, broken in gcc-4.1.1-21
+
 * Sat Sep 16 2006 Kevin Fenzi <kevin@tummy.com> - 0.4.0-0.5.rc1
 - Remove duplicate thunar-sendto-email.desktop entry from files. 
 
