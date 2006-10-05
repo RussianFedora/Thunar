@@ -1,7 +1,7 @@
 Summary: Thunar File Manager
 Name: Thunar
 Version: 0.4.0
-Release: 0.6.rc1%{?dist}
+Release: 0.7.rc1%{?dist}
 License: GPL
 URL: http://thunar.xfce.org/
 Source0: http://www.xfce.org/archive/xfce-4.3.99.1/src/Thunar-0.4.0rc1.tar.bz2
@@ -145,9 +145,8 @@ fi
 %{_datadir}/icons/hicolor/48x48/apps/Thunar.png
 %{_datadir}/icons/hicolor/scalable/apps/Thunar.svg
 %{_datadir}/pixmaps/Thunar
-# disable trash plugin for now because it doesn't build with 4.3.2
-#%{_datadir}/xfce4/panel-plugins/thunar-tpa.desktop
-#%{_libexecdir}/xfce4/panel-plugins/thunar-tpa
+%{_datadir}/xfce4/panel-plugins/thunar-tpa.desktop
+%{_libexecdir}/xfce4/panel-plugins/thunar-tpa
 %{_mandir}/man1/Thunar.1*
 %dir %{_sysconfdir}/xdg/Thunar
 %config(noreplace) %{_sysconfdir}/xdg/Thunar/uca.xml
@@ -163,6 +162,9 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Thu Oct 05 2006 Kevin Fenzi <kevin@tummy.com> - 0.4.0-0.7.rc1
+- Re-enable trash plugin in Xfce 4.4rc1
+
 * Thu Oct 05 2006 Christian Iseli <Christian.Iseli@licr.org> - 0.4.0-0.6.rc1
  - rebuilt for unwind info generation, broken in gcc-4.1.1-21
 
