@@ -63,10 +63,6 @@ chmod 644 examples/xfce-file-manager.py
 rm -f $RPM_BUILD_ROOT/%{_libdir}/*.la
 rm -f $RPM_BUILD_ROOT/%{_libdir}/thunarx-1/*.la
 
-# remove the tpa plugin and desktop if it's present. 
-rm -f $RPM_BUILD_ROOT/%{_libexecdir}/xfce4/panel-plugins/thunar-tpa
-rm -f $RPM_BUILD_ROOT/%{_datadir}/xfce4/panel-plugins/thunar-tpa.desktop
-
 %find_lang Thunar
 
 rm -f ${RPM_BUILD_ROOT}%{_datadir}/applications/Thunar-bulk-rename.desktop
@@ -162,6 +158,9 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Thu Oct 05 2006 Kevin Fenzi <kevin@tummy.com> - 0.4.0-0.8.rc1
+- Really re-enable the trash plugin. 
+
 * Thu Oct 05 2006 Kevin Fenzi <kevin@tummy.com> - 0.4.0-0.7.rc1
 - Re-enable trash plugin in Xfce 4.4rc1
 
