@@ -1,7 +1,7 @@
 Summary: Thunar File Manager
 Name: Thunar
 Version: 0.4.0
-Release: 0.9.rc1%{?dist}
+Release: 0.10.rc1%{?dist}
 License: GPL
 URL: http://thunar.xfce.org/
 Source0: http://www.xfce.org/archive/xfce-4.3.99.1/src/Thunar-0.4.0rc1.tar.bz2
@@ -26,8 +26,8 @@ BuildRequires: GConf2-devel
 BuildRequires: gtk-doc
 
 # obsolete xffm to allow for smooth upgrades
-Provides: xffm = 4.2.4-1
-Obsoletes: xffm <= 4.2.3-5
+Provides: xffm = 4.2.4
+Obsoletes: xffm <= 4.2.3-5.fc6
 
 %description
 Thunar is a new modern file manager for the Xfce Desktop Environment. 
@@ -162,6 +162,9 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Fri Oct 06 2006 Kevin Fenzi <kevin@tummy.com> - 0.4.0-0.10.rc1
+- Tweak Obsoletes versions
+
 * Fri Oct 06 2006 Kevin Fenzi <kevin@tummy.com> - 0.4.0-0.9.rc1
 - Obsolete xffm for now. 
 
