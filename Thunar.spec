@@ -1,7 +1,7 @@
 Summary: Thunar File Manager
 Name: Thunar
 Version: 0.4.0
-Release: 0.10.rc1%{?dist}
+Release: 0.11.rc1%{?dist}
 License: GPL
 URL: http://thunar.xfce.org/
 Source0: http://www.xfce.org/archive/xfce-4.3.99.1/src/Thunar-0.4.0rc1.tar.bz2
@@ -24,6 +24,8 @@ BuildRequires: pkgconfig
 BuildRequires: libxslt
 BuildRequires: GConf2-devel
 BuildRequires: gtk-doc
+Requires: shared-mime-info
+Requires: xfce4-icon-theme
 
 # obsolete xffm to allow for smooth upgrades
 Provides: xffm = 4.2.4
@@ -162,6 +164,9 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Mon Oct 09 2006 Kevin Fenzi <kevin@tummy.com> - 0.4.0-0.11.rc1
+- Add shared-mime-info and xfce4-icon-theme as Requires (fixes #209592)
+
 * Fri Oct 06 2006 Kevin Fenzi <kevin@tummy.com> - 0.4.0-0.10.rc1
 - Tweak Obsoletes versions
 
