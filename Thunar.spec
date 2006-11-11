@@ -1,10 +1,10 @@
 Summary: Thunar File Manager
 Name: Thunar
-Version: 0.4.0
-Release: 0.11.rc1%{?dist}
+Version: 0.5.0
+Release: 0.1.rc2%{?dist}
 License: GPL
 URL: http://thunar.xfce.org/
-Source0: http://www.xfce.org/archive/xfce-4.3.99.1/src/Thunar-0.4.0rc1.tar.bz2
+Source0: http://www.xfce.org/archive/xfce-4.3.99.2/src/Thunar-0.5.0rc2.tar.bz2
 Group: User Interface/Desktops
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: fam-devel
@@ -49,7 +49,7 @@ Requires: exo-devel >= 0.3.1.10
 libraries and header files for the Thunar file manager.
 
 %prep
-%setup -q -n %{name}-%{version}rc1
+%setup -q -n %{name}-%{version}rc2
 
 %build
 %configure --enable-dbus --enable-final --enable-xsltproc --enable-gtk-doc
@@ -164,6 +164,9 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Thu Nov 09 2006 Kevin Fenzi <kevin@tummy.com> - 0.5.0-0.1.rc2
+- Upgrade to 0.5.0rc2
+
 * Mon Oct 09 2006 Kevin Fenzi <kevin@tummy.com> - 0.4.0-0.11.rc1
 - Add shared-mime-info and xfce4-icon-theme as Requires (fixes #209592)
 
