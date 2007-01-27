@@ -1,10 +1,10 @@
 Summary: Thunar File Manager
 Name: Thunar
-Version: 0.5.0
-Release: 0.1.rc2%{?dist}
+Version: 0.8.0
+Release: 1%{?dist}
 License: GPL
 URL: http://thunar.xfce.org/
-Source0: http://www.xfce.org/archive/xfce-4.3.99.2/src/Thunar-0.5.0rc2.tar.bz2
+Source0: http://www.xfce.org/archive/xfce-4.4.0/src/Thunar-0.8.0.tar.bz2
 Group: User Interface/Desktops
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: fam-devel
@@ -12,7 +12,7 @@ BuildRequires: libjpeg-devel
 BuildRequires: libexif-devel
 BuildRequires: libpng-devel >= 2:1.2.2-16
 BuildRequires: desktop-file-utils >= 0.7
-BuildRequires: exo-devel >= 0.3.1.10
+BuildRequires: exo-devel >= 0.3.2
 BuildRequires: startup-notification-devel >= 0.4
 BuildRequires: intltool gettext
 BuildRequires: dbus-glib-devel 
@@ -43,13 +43,13 @@ Summary: Development tools for Thunar file manager
 Group: Development/Libraries
 Requires: %{name} = %{version}-%{release}
 Requires: pkgconfig
-Requires: exo-devel >= 0.3.1.10
+Requires: exo-devel >= 0.3.2
 
 %description devel
 libraries and header files for the Thunar file manager.
 
 %prep
-%setup -q -n %{name}-%{version}rc2
+%setup -q
 
 %build
 %configure --enable-dbus --enable-final --enable-xsltproc --enable-gtk-doc
@@ -123,6 +123,7 @@ fi
 %{_bindir}/Thunar
 %{_bindir}/thunar
 %{_libdir}/libthunar*.so.*
+%dir %{_libdir}/thunarx-1/
 %{_libdir}/thunarx-1/thunar*.so
 %{_libexecdir}/ThunarBulkRename
 %{_libexecdir}/ThunarHelp
@@ -134,6 +135,8 @@ fi
 %dir %{_datadir}/Thunar/
 %dir %{_datadir}/Thunar/sendto/
 %{_datadir}/Thunar/sendto/thunar-sendto-email.desktop
+%dir %{_datadir}/thumbnailers
+%{_datadir}/thumbnailers/thunar-vfs-font-thumbnailer-1.desktop
 %{_datadir}/applications/fedora-Thunar-bulk-rename.desktop
 %{_datadir}/applications/fedora-Thunar-folder-handler.desktop
 %{_datadir}/applications/fedora-Thunar.desktop
@@ -164,6 +167,15 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Sun Jan 21 2007 Kevin Fenzi <kevin@tummy.com> - 0.8.0-1
+- Upgrade to 0.8.0
+
+* Mon Dec 18 2006 Kevin Fenzi <kevin@tummy.com> - 0.5.0-0.3.rc2
+- Own the thunarx-1 directory
+
+* Sat Nov 11 2006 Kevin Fenzi <kevin@tummy.com> - 0.5.0-0.2.rc2
+- Increase exo version 
+
 * Thu Nov 09 2006 Kevin Fenzi <kevin@tummy.com> - 0.5.0-0.1.rc2
 - Upgrade to 0.5.0rc2
 
