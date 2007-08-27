@@ -1,8 +1,8 @@
 Summary: Thunar File Manager
 Name: Thunar
 Version: 0.8.0
-Release: 1%{?dist}
-License: GPL
+Release: 3%{?dist}
+License: GPLv2+
 URL: http://thunar.xfce.org/
 Source0: http://www.xfce.org/archive/xfce-4.4.0/src/Thunar-0.8.0.tar.bz2
 Group: User Interface/Desktops
@@ -30,6 +30,9 @@ Requires: xfce4-icon-theme
 # obsolete xffm to allow for smooth upgrades
 Provides: xffm = 4.2.4
 Obsoletes: xffm <= 4.2.3-5.fc6
+
+# Provide lowercase name to help people find the package. 
+Provides: thunar = %{version}-%{release}
 
 %description
 Thunar is a new modern file manager for the Xfce Desktop Environment. 
@@ -167,6 +170,12 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Mon Aug 27 2007 Kevin Fenzi <kevin@tummy.com> - 0.8.0-3
+- Update License tag
+
+* Mon Jul  9 2007 Kevin Fenzi <kevin@tummy.com> - 0.8.0-2
+- Add provides for lowercase name
+
 * Sun Jan 21 2007 Kevin Fenzi <kevin@tummy.com> - 0.8.0-1
 - Upgrade to 0.8.0
 
