@@ -1,10 +1,10 @@
 Summary: Thunar File Manager
 Name: Thunar
-Version: 0.8.0
-Release: 3%{?dist}
+Version: 0.9.0
+Release: 1%{?dist}
 License: GPLv2+
 URL: http://thunar.xfce.org/
-Source0: http://www.xfce.org/archive/xfce-4.4.0/src/Thunar-0.8.0.tar.bz2
+Source0: http://www.xfce.org/archive/xfce-4.4.2/src/Thunar-0.9.0.tar.bz2
 Group: User Interface/Desktops
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: fam-devel
@@ -170,6 +170,9 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Sun Dec  2 2007 Kevin Fenzi <kevin@tummy.com> - 0.9.0-1
+- Update to 0.9.0
+
 * Mon Aug 27 2007 Kevin Fenzi <kevin@tummy.com> - 0.8.0-3
 - Update License tag
 
