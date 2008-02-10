@@ -1,7 +1,7 @@
 Summary: Thunar File Manager
 Name: Thunar
 Version: 0.9.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: GPLv2+
 URL: http://thunar.xfce.org/
 Source0: http://www.xfce.org/archive/xfce-4.4.2/src/Thunar-0.9.0.tar.bz2
@@ -172,6 +172,9 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Sun Feb 10 2008 Kevin Fenzi <kevin@tummy.com> - 0.9.0-3
+- Rebuild for gcc43
+
 * Mon Dec  3 2007 Kevin Fenzi <kevin@tummy.com> - 0.9.0-2
 - Add thunar-vfs patch. 
 
