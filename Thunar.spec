@@ -65,6 +65,11 @@ libraries and header files for the Thunar file manager.
 sed -i 's!internet-mail!mail-message-new!' \
         plugins/thunar-sendto-email/thunar-sendto-email.desktop.in.in
 
+# second part of the xdg-userdir fixes
+pushd thunar
+exo-csource --name=thunar_window_ui thunar-window-ui.xml > thunar-window-ui.h
+popd
+
 %build
 %configure --enable-dbus --enable-final --enable-xsltproc --enable-gtk-doc
 make %{?_smp_mflags}
