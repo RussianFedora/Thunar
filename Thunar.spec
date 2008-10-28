@@ -8,7 +8,11 @@ Source0: http://www.xfce.org/archive/xfce-4.4.2/src/Thunar-%{version}.tar.bz2
 Source1: thunar-sendto-bluetooth.desktop
 Source2: thunar-sendto-audacious-playlist.desktop
 Patch0: thunar-vfs-audio-cd-fix.patch
+# according to http://bugzilla.xfce.org/show_bug.cgi?id=2983 
+# this should be applied, but it isn't =< 0.9.3
 Patch1: thunar-vfs-nozombies.patch
+# send upstream via http://bugzilla.xfce.org/show_bug.cgi?id=4365
+# applied in trunk for 4.6
 Patch2: thunar-0.9.0-xdg-userdir-compat.patch
 Group: User Interface/Desktops
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
