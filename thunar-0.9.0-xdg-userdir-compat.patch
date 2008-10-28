@@ -1,0 +1,902 @@
+diff -Naurp Thunar-0.9.0.bak/thunar/thunar-file.c Thunar-0.9.0/thunar/thunar-file.c
+--- Thunar-0.9.0.bak/thunar/thunar-file.c	2007-12-02 14:46:32.000000000 +0100
++++ Thunar-0.9.0/thunar/thunar-file.c	2008-08-29 23:33:36.000000000 +0200
+@@ -1620,6 +1620,45 @@ thunar_file_set_custom_icon (ThunarFile 
+   return TRUE;
+ }
+ 
++/**
++ * thunar_file_is_desktop:
++ * @file : a #ThunarFile.
++ *
++ * Checks whether @file refers to the users desktop directory.
++ *
++ * Return value: %TRUE if @file is the users desktop directory.
++ **/
++gboolean thunar_file_is_desktop (const ThunarFile *file)
++{
++    gchar *file_path = thunar_vfs_path_dup_string(thunar_file_get_path(file));
++    gchar *desktop_dir = NULL;
++    gboolean was_user_desktop_dir_found = TRUE;
++    gboolean result;
++    ThunarVfsPath *home = NULL;
++    ThunarVfsPath *desktop_vfs = NULL;
++
++    desktop_dir = (gchar *)g_get_user_special_dir(G_USER_DIRECTORY_DESKTOP);
++    if (G_UNLIKELY(desktop_dir == NULL)) {
++        home = thunar_vfs_path_get_for_home ();
++        desktop_vfs = thunar_vfs_path_relative (home, "Desktop");
++        desktop_dir = (gchar *)thunar_vfs_path_get_name(desktop_vfs);
++        was_user_desktop_dir_found = FALSE;
++    }
++
++    if ((desktop_dir != NULL) && (!g_strcmp0(file_path, desktop_dir)))
++        result = TRUE;
++    else
++        result = FALSE;
++
++    if (G_UNLIKELY(was_user_desktop_dir_found == FALSE)) {
++        g_free(desktop_dir);
++        thunar_vfs_path_unref(desktop_vfs);
++        thunar_vfs_path_unref(home);
++    }
++    g_free(file_path);
++
++    return result;
++}
+ 
+ 
+ /**
+diff -Naurp Thunar-0.9.0.bak/thunar/thunar-file.h Thunar-0.9.0/thunar/thunar-file.h
+--- Thunar-0.9.0.bak/thunar/thunar-file.h	2007-12-02 14:46:32.000000000 +0100
++++ Thunar-0.9.0/thunar/thunar-file.h	2008-08-29 23:12:54.000000000 +0200
+@@ -24,6 +24,8 @@
+ #include <thunar/thunar-metafile.h>
+ #include <thunarx/thunarx.h>
+ 
++#include <glib.h>
++
+ G_BEGIN_DECLS;
+ 
+ typedef struct _ThunarFileClass ThunarFileClass;
+@@ -202,6 +204,8 @@ ThunarFile       *thunar_file_cache_look
+ GList            *thunar_file_list_get_applications  (GList *file_list);
+ GList            *thunar_file_list_to_path_list      (GList *file_list);
+ 
++gboolean thunar_file_is_desktop (const ThunarFile *file);
++
+ 
+ /**
+  * thunar_file_has_parent:
+@@ -450,18 +454,6 @@ G_STMT_START{                           
+ #define thunar_file_is_home(file) (thunar_vfs_path_is_home (THUNAR_FILE ((file))->info->path))
+ 
+ /**
+- * thunar_file_is_desktop:
+- * @file : a #ThunarFile.
+- *
+- * Checks whether @file refers to the users desktop directory.
+- *
+- * Return value: %TRUE if @file is the users desktop directory.
+- **/
+-#define thunar_file_is_desktop(file) (!thunar_vfs_path_is_root (thunar_file_get_path (file))                              \
+-                                   && thunar_vfs_path_is_home (thunar_vfs_path_get_parent (thunar_file_get_path (file)))  \
+-                                   && exo_str_is_equal (thunar_file_get_display_name (file), "Desktop"))
+-
+-/**
+  * thunar_file_is_regular:
+  * @file : a #ThunarFile.
+  *
+diff -Naurp Thunar-0.9.0.bak/thunar/thunar-launcher.c Thunar-0.9.0/thunar/thunar-launcher.c
+--- Thunar-0.9.0.bak/thunar/thunar-launcher.c	2007-12-02 14:46:32.000000000 +0100
++++ Thunar-0.9.0/thunar/thunar-launcher.c	2008-08-29 23:48:29.000000000 +0200
+@@ -1169,6 +1169,9 @@ thunar_launcher_action_sendto_desktop (G
+   ThunarVfsPath     *desktop_path;
+   ThunarVfsPath     *home_path;
+   GList             *paths;
++  GError            *error = NULL;
++  const gchar       *str_desktop_path = NULL;
++  gboolean          was_user_desktop_found = TRUE;
+ 
+   _thunar_return_if_fail (GTK_IS_ACTION (action));
+   _thunar_return_if_fail (THUNAR_IS_LAUNCHER (launcher));
+@@ -1180,7 +1183,20 @@ thunar_launcher_action_sendto_desktop (G
+ 
+   /* determine the path to the ~/Desktop folder */
+   home_path = thunar_vfs_path_get_for_home ();
+-  desktop_path = thunar_vfs_path_relative (home_path, "Desktop");
++
++  str_desktop_path = g_get_user_special_dir (G_USER_DIRECTORY_DESKTOP);
++  if (G_UNLIKELY (str_desktop_path == NULL)) {
++    was_user_desktop_found = FALSE;
++    desktop_path = thunar_vfs_path_relative (home_path, "Desktop");
++  } else {
++    /* let's copy this string because it must not be freed (owned by glib) */
++    desktop_path = thunar_vfs_path_new(
++		  str_desktop_path,
++		  &error);
++    if (G_UNLIKELY (error != NULL))
++      desktop_path = thunar_vfs_path_relative (home_path, "Desktop");
++  }
++
+   thunar_vfs_path_unref (home_path);
+ 
+   /* launch the link job */
+@@ -1191,6 +1207,10 @@ thunar_launcher_action_sendto_desktop (G
+   /* cleanup */
+   thunar_vfs_path_unref (desktop_path);
+   thunar_vfs_path_list_free (paths);
++  if (G_UNLIKELY(was_user_desktop_found == FALSE))
++    g_free(str_desktop_path);
++  if (G_UNLIKELY(error != NULL))
++    g_error_free(error);
+ }
+ 
+ 
+diff -Naurp Thunar-0.9.0.bak/thunar/thunar-shortcuts-model.c Thunar-0.9.0/thunar/thunar-shortcuts-model.c
+--- Thunar-0.9.0.bak/thunar/thunar-shortcuts-model.c	2007-12-02 14:46:32.000000000 +0100
++++ Thunar-0.9.0/thunar/thunar-shortcuts-model.c	2008-08-29 23:51:21.000000000 +0200
+@@ -33,6 +33,8 @@
+ #include <thunar/thunar-shortcuts-model.h>
+ #include <thunar/thunar-private.h>
+ 
++#include <glib.h>
++
+ 
+ 
+ #define THUNAR_SHORTCUT(obj) ((ThunarShortcut *) (obj))
+@@ -264,6 +266,10 @@ thunar_shortcuts_model_init (ThunarShort
+   GList           *lp;
+   guint            n;
+ 
++  GError          *error = NULL;
++  gboolean        was_user_desktop_found = TRUE;
++  const gchar *desktop_path = g_get_user_special_dir (G_USER_DIRECTORY_DESKTOP);
++
+ #ifndef NDEBUG
+   model->stamp = g_random_int ();
+ #endif
+@@ -276,7 +282,15 @@ thunar_shortcuts_model_init (ThunarShort
+   /* determine the system-defined paths */
+   system_path_list[0] = thunar_vfs_path_get_for_home ();
+   system_path_list[1] = thunar_vfs_path_get_for_trash ();
+-  system_path_list[2] = thunar_vfs_path_relative (system_path_list[0], "Desktop");
++
++  if (G_UNLIKELY (desktop_path == NULL)) {
++    was_user_desktop_found = FALSE;
++    system_path_list[2] = thunar_vfs_path_relative (system_path_list[0], "Desktop");
++  } else {
++    system_path_list[2] = thunar_vfs_path_new(desktop_path, &error);
++    if (G_UNLIKELY (error != NULL))
++      system_path_list[2] = thunar_vfs_path_relative (system_path_list[0], "Desktop");
++  }
+   system_path_list[3] = thunar_vfs_path_get_for_root ();
+ 
+   /* will be used to append the shortcuts to the list */
+@@ -357,6 +371,10 @@ thunar_shortcuts_model_init (ThunarShort
+   /* cleanup */
+   thunar_vfs_path_unref (fpath);
+   gtk_tree_path_free (path);
++  if (G_UNLIKELY(error != NULL))
++    g_error_free(error);
++  if (G_UNLIKELY(was_user_desktop_found == FALSE))
++    g_free(desktop_path);
+ }
+ 
+ 
+diff -Naurp Thunar-0.9.0.bak/thunar/thunar-stock.h Thunar-0.9.0/thunar/thunar-stock.h
+--- Thunar-0.9.0.bak/thunar/thunar-stock.h	2007-12-02 14:46:33.000000000 +0100
++++ Thunar-0.9.0/thunar/thunar-stock.h	2008-08-29 23:12:54.000000000 +0200
+@@ -28,6 +28,7 @@ G_BEGIN_DECLS;
+ #define THUNAR_STOCK_TEMPLATES    "thunar-templates"    /* see ThunarWindow */
+ #define THUNAR_STOCK_TRASH_EMPTY  "thunar-trash-empty"  /* see ThunarTrashAction */
+ #define THUNAR_STOCK_TRASH_FULL   "thunar-trash-full"   /* see ThunarTrashAction */
++#define THUNAR_STOCK_DIRECTORY    "gnome-fs-directory"
+ 
+ void thunar_stock_init (void) G_GNUC_INTERNAL;
+ 
+diff -Naurp Thunar-0.9.0.bak/thunar/thunar-templates-action.c Thunar-0.9.0/thunar/thunar-templates-action.c
+--- Thunar-0.9.0.bak/thunar/thunar-templates-action.c	2007-12-02 14:46:33.000000000 +0100
++++ Thunar-0.9.0/thunar/thunar-templates-action.c	2008-08-29 23:59:30.000000000 +0200
+@@ -352,6 +352,9 @@ thunar_templates_action_menu_shown (GtkW
+   GtkWidget     *image;
+   GtkWidget     *item;
+   GList         *children;
++  GError        *error = NULL;
++  gboolean      was_user_templates_dir_found = TRUE;
++  const gchar   *templates_dir=g_get_user_special_dir(G_USER_DIRECTORY_TEMPLATES);
+ 
+   _thunar_return_if_fail (THUNAR_IS_TEMPLATES_ACTION (templates_action));
+   _thunar_return_if_fail (GTK_IS_MENU_SHELL (menu));
+@@ -363,7 +366,19 @@ thunar_templates_action_menu_shown (GtkW
+ 
+   /* determine the path to the ~/Templates folder */
+   home_path = thunar_vfs_path_get_for_home ();
+-  templates_path = thunar_vfs_path_relative (home_path, "Templates");
++
++  if (G_UNLIKELY (templates_dir == NULL)) {
++    was_user_templates_dir_found = FALSE;
++    templates_path =  thunar_vfs_path_relative (home_path, "Templates");
++  } else {
++    templates_path = thunar_vfs_path_new(
++		  templates_dir,
++		  &error);
++  
++    if (G_UNLIKELY (error != NULL))
++      templates_path =  thunar_vfs_path_relative (home_path, "Templates");
++  }
++
+   thunar_vfs_path_unref (home_path);
+ 
+   /* fill the menu with files/folders from the ~/Templates folder */
+@@ -397,6 +412,10 @@ thunar_templates_action_menu_shown (GtkW
+ 
+   /* cleanup */
+   thunar_vfs_path_unref (templates_path);
++  if (G_UNLIKELY(was_user_templates_dir_found == FALSE))
++    g_free(templates_dir);
++  if (G_UNLIKELY(error != NULL))
++    g_error_free(error);
+ }
+ 
+ 
+diff -Naurp Thunar-0.9.0.bak/thunar/thunar-window.c Thunar-0.9.0/thunar/thunar-window.c
+--- Thunar-0.9.0.bak/thunar/thunar-window.c	2007-12-02 14:46:33.000000000 +0100
++++ Thunar-0.9.0/thunar/thunar-window.c	2008-08-30 00:27:38.000000000 +0200
+@@ -54,6 +54,8 @@
+ #include <thunar/thunar-window.h>
+ #include <thunar/thunar-window-ui.h>
+ 
++#include <glib.h>
++
+ 
+ 
+ /* Property identifiers */
+@@ -146,8 +148,22 @@ static void     thunar_window_action_go_
+                                                            ThunarWindow           *window);
+ static void     thunar_window_action_open_home            (GtkAction              *action,
+                                                            ThunarWindow           *window);
++static void     thunar_window_action_open_desktop       (GtkAction              *action,
++                                                           ThunarWindow           *window);
++static void     thunar_window_action_open_documents       (GtkAction              *action,
++                                                           ThunarWindow           *window);
++static void     thunar_window_action_open_downloads       (GtkAction              *action,
++                                                           ThunarWindow           *window);
++static void     thunar_window_action_open_music       (GtkAction              *action,
++                                                           ThunarWindow           *window);
++static void     thunar_window_action_open_pictures       (GtkAction              *action,
++                                                           ThunarWindow           *window);
++static void     thunar_window_action_open_public       (GtkAction              *action,
++                                                           ThunarWindow           *window);
+ static void     thunar_window_action_open_templates       (GtkAction              *action,
+                                                            ThunarWindow           *window);
++static void     thunar_window_action_open_videos       (GtkAction              *action,
++                                                           ThunarWindow           *window);
+ static void     thunar_window_action_open_trash           (GtkAction              *action,
+                                                            ThunarWindow           *window);
+ static void     thunar_window_action_open_location        (GtkAction              *action,
+@@ -281,7 +297,14 @@ static const GtkActionEntry action_entri
+   { "go-menu", NULL, N_ ("_Go"), NULL, },
+   { "open-parent", GTK_STOCK_GO_UP, N_ ("Open _Parent"), "<alt>Up", N_ ("Open the parent folder"), G_CALLBACK (thunar_window_action_go_up), },
+   { "open-home", THUNAR_STOCK_HOME, N_ ("_Home"), "<alt>Home", N_ ("Go to the home folder"), G_CALLBACK (thunar_window_action_open_home), },
++  { "open-desktop", THUNAR_STOCK_DESKTOP, N_ ("_Desktop"), NULL, N_ ("Go to the desktop folder"), G_CALLBACK (thunar_window_action_open_desktop), },
++  { "open-documents", THUNAR_STOCK_DIRECTORY, N_ ("Do_cuments"), NULL, N_ ("Go to the documents folder"), G_CALLBACK (thunar_window_action_open_documents), },
++  { "open-downloads", THUNAR_STOCK_DIRECTORY, N_ ("Do_wnloads"), NULL, N_ ("Go to the downloads folder"), G_CALLBACK (thunar_window_action_open_downloads), },
++  { "open-music", THUNAR_STOCK_DIRECTORY, N_ ("_Music"), NULL, N_ ("Go to the music folder"), G_CALLBACK (thunar_window_action_open_music), },
++  { "open-pictures", THUNAR_STOCK_DIRECTORY, N_ ("_Pictures"), NULL, N_ ("Go to the pictures folder"), G_CALLBACK (thunar_window_action_open_pictures), },
++  { "open-public", THUNAR_STOCK_DIRECTORY, N_ ("Pu_blic"), NULL, N_ ("Go to the public folder"), G_CALLBACK (thunar_window_action_open_public), },
+   { "open-templates", THUNAR_STOCK_TEMPLATES, N_ ("T_emplates"), NULL, N_ ("Go to the templates folder"), G_CALLBACK (thunar_window_action_open_templates), },
++  { "open-videos", THUNAR_STOCK_DIRECTORY, N_ ("_Videos"), NULL, N_ ("Go to the videos folder"), G_CALLBACK (thunar_window_action_open_videos), },
+   { "open-location", NULL, N_ ("_Open Location..."), "<control>L", N_ ("Specify a location to open"), G_CALLBACK (thunar_window_action_open_location), },
+   { "help-menu", NULL, N_ ("_Help"), NULL, },
+   { "contents", GTK_STOCK_HELP, N_ ("_Contents"), "F1", N_ ("Display Thunar user manual"), G_CALLBACK (thunar_window_action_contents), },
+@@ -1788,7 +1811,373 @@ thunar_window_action_open_home (GtkActio
+   thunar_vfs_path_unref (home_path);
+ }
+ 
++static void
++thunar_window_action_open_desktop (GtkAction    *action,
++                                     ThunarWindow *window)
++{
++  ThunarVfsPath *home_path;
++  ThunarVfsPath *desktop_path;
++  ThunarFile    *desktop_file = NULL;
++  GError        *error = NULL;
++  gchar         *absolute_path;
++  const gchar   *desktop_dir = g_get_user_special_dir(G_USER_DIRECTORY_DESKTOP);
++  gboolean      was_user_desktop_dir_found = TRUE;
++
++  _thunar_return_if_fail (GTK_IS_ACTION (action));
++  _thunar_return_if_fail (THUNAR_IS_WINDOW (window));
++
++  /* determine the path to the ~/Desktop folder */
++  home_path = thunar_vfs_path_get_for_home ();
++  if (G_UNLIKELY (desktop_dir == NULL)) {
++    was_user_desktop_dir_found = FALSE;
++    desktop_path = thunar_vfs_path_relative (home_path, "Desktop");
++  } else {
++    desktop_path = thunar_vfs_path_new(desktop_dir,&error);
++  
++    if (G_UNLIKELY (error != NULL))
++      desktop_path =  thunar_vfs_path_relative (home_path, "Desktop");
++  }
++
++  thunar_vfs_path_unref (home_path);
++
++  /* make sure that the ~/Desktop folder exists */
++  absolute_path = thunar_vfs_path_dup_string (desktop_path);
++  xfce_mkdirhier (absolute_path, 0755, &error);
++  g_free (absolute_path);
++
++  /* determine the file for the ~/Desktop path */
++  if (G_LIKELY (error == NULL))
++    desktop_file = thunar_file_get_for_path (desktop_path, &error);
++
++  /* open the ~/Desktop folder */
++  if (G_LIKELY (desktop_file != NULL))
++    {
++      /* go to the ~/Desktop folder */
++      thunar_window_set_current_directory (window, desktop_file);
++      g_object_unref (G_OBJECT (desktop_file));
++
++    }
++
++  /* display an error dialog if something went wrong */
++  if (G_UNLIKELY (error != NULL))
++    {
++      thunar_dialogs_show_error (GTK_WIDGET (window), error, _("Failed to open the desktop folder"));
++      g_error_free (error);
++    }
++
++  /* release our reference on the ~/Desktop path */
++  thunar_vfs_path_unref (desktop_path);
++
++  if (G_UNLIKELY(was_user_desktop_dir_found == FALSE))
++    g_free(desktop_dir);
++}
++
++
++static void
++thunar_window_action_open_documents (GtkAction    *action,
++                                     ThunarWindow *window)
++{
++  ThunarVfsPath *home_path;
++  ThunarVfsPath *documents_path;
++  ThunarFile    *documents_file = NULL;
++  GError        *error = NULL;
++  gchar         *absolute_path;
++  const gchar *documents_dir=g_get_user_special_dir(G_USER_DIRECTORY_DOCUMENTS);
++  gboolean      was_user_documents_dir_found = TRUE;
++
++  _thunar_return_if_fail (GTK_IS_ACTION (action));
++  _thunar_return_if_fail (THUNAR_IS_WINDOW (window));
++
++  /* determine the path to the ~/Documents folder */
++  home_path = thunar_vfs_path_get_for_home ();
++  if (G_UNLIKELY (documents_dir == NULL)) {
++    was_user_documents_dir_found = FALSE;
++    documents_path =  thunar_vfs_path_relative (home_path, "Documents");
++  } else {
++    documents_path = thunar_vfs_path_new(documents_dir, &error);
++  
++    if (G_UNLIKELY (error != NULL))
++      documents_path =  thunar_vfs_path_relative (home_path, "Documents");
++  }
++
++  thunar_vfs_path_unref (home_path);
++
++  /* make sure that the ~/Documents folder exists */
++  absolute_path = thunar_vfs_path_dup_string (documents_path);
++  xfce_mkdirhier (absolute_path, 0755, &error);
++  g_free (absolute_path);
++
++  /* determine the file for the ~/Documents path */
++  if (G_LIKELY (error == NULL))
++    documents_file = thunar_file_get_for_path (documents_path, &error);
++
++  /* open the ~/Documents folder */
++  if (G_LIKELY (documents_file != NULL))
++    {
++      /* go to the ~/Documents folder */
++      thunar_window_set_current_directory (window, documents_file);
++      g_object_unref (G_OBJECT (documents_file));
++
++    }
++
++  /* display an error dialog if something went wrong */
++  if (G_UNLIKELY (error != NULL))
++    {
++      thunar_dialogs_show_error (GTK_WIDGET (window), error, _("Failed to open the documents folder"));
++      g_error_free (error);
++    }
++
++  /* release our reference on the ~/Documents path */
++  thunar_vfs_path_unref (documents_path);
++
++  if (G_UNLIKELY(was_user_documents_dir_found == FALSE))
++    g_free(documents_dir);
++}
++
++
++static void
++thunar_window_action_open_downloads (GtkAction    *action,
++                                     ThunarWindow *window)
++{
++  ThunarVfsPath *home_path;
++  ThunarVfsPath *downloads_path;
++  ThunarFile    *downloads_file = NULL;
++  GError        *error = NULL;
++  gchar         *absolute_path;
++  const gchar   *download_dir=g_get_user_special_dir(G_USER_DIRECTORY_DOWNLOAD);
++  gboolean      was_user_download_dir_found = TRUE;
++
++  _thunar_return_if_fail (GTK_IS_ACTION (action));
++  _thunar_return_if_fail (THUNAR_IS_WINDOW (window));
++
++  /* determine the path to the ~/Downloads folder */
++  home_path = thunar_vfs_path_get_for_home ();
++  if (G_UNLIKELY (download_dir == NULL)) {
++    was_user_download_dir_found = FALSE;
++    downloads_path =  thunar_vfs_path_relative (home_path, "Downloads");
++  } else {
++    downloads_path = thunar_vfs_path_new(download_dir, &error);
++    
++    if (G_UNLIKELY (error != NULL))
++      downloads_path =  thunar_vfs_path_relative (home_path, "Downloads");
++  }
++
++  thunar_vfs_path_unref (home_path);
++
++  /* make sure that the ~/Downloads folder exists */
++  absolute_path = thunar_vfs_path_dup_string (downloads_path);
++  xfce_mkdirhier (absolute_path, 0755, &error);
++  g_free (absolute_path);
++
++  /* determine the file for the ~/Downloads path */
++  if (G_LIKELY (error == NULL))
++    downloads_file = thunar_file_get_for_path (downloads_path, &error);
++
++  /* open the ~/Downloads folder */
++  if (G_LIKELY (downloads_file != NULL))
++    {
++      /* go to the ~/Downloads folder */
++      thunar_window_set_current_directory (window, downloads_file);
++      g_object_unref (G_OBJECT (downloads_file));
++
++    }
++
++  /* display an error dialog if something went wrong */
++  if (G_UNLIKELY (error != NULL))
++    {
++      thunar_dialogs_show_error (GTK_WIDGET (window), error, _("Failed to open the downloads folder"));
++      g_error_free (error);
++    }
++
++  /* release our reference on the ~/Download path */
++  thunar_vfs_path_unref (downloads_path);
++
++  if (G_UNLIKELY(was_user_download_dir_found == FALSE))
++    g_free(download_dir);
++}
++
++static void
++thunar_window_action_open_music (GtkAction    *action,
++                                     ThunarWindow *window)
++{
++  ThunarVfsPath *home_path;
++  ThunarVfsPath *music_path;
++  ThunarFile    *music_file = NULL;
++  GError        *error = NULL;
++  gchar         *absolute_path;
++  gboolean      was_user_music_dir_found = TRUE;
++  const gchar   *music_dir=g_get_user_special_dir(G_USER_DIRECTORY_MUSIC);
++
++  _thunar_return_if_fail (GTK_IS_ACTION (action));
++  _thunar_return_if_fail (THUNAR_IS_WINDOW (window));
++
++  /* determine the path to the ~/Music folder */
++  home_path = thunar_vfs_path_get_for_home ();
++  if (G_UNLIKELY (music_dir == NULL)) {
++    was_user_music_dir_found = FALSE;
++    music_path =  thunar_vfs_path_relative (home_path, "Music");
++  } else {
++    music_path = thunar_vfs_path_new(music_dir, &error);
++  
++    if (G_UNLIKELY (error != NULL))
++      music_path =  thunar_vfs_path_relative (home_path, "Music");
++  }
++
++  thunar_vfs_path_unref (home_path);
++
++  /* make sure that the ~/Music folder exists */
++  absolute_path = thunar_vfs_path_dup_string (music_path);
++  xfce_mkdirhier (absolute_path, 0755, &error);
++  g_free (absolute_path);
++
++  /* determine the file for the ~/Music path */
++  if (G_LIKELY (error == NULL))
++    music_file = thunar_file_get_for_path (music_path, &error);
++
++  /* open the ~/Music folder */
++  if (G_LIKELY (music_file != NULL))
++    {
++      /* go to the ~/Music folder */
++      thunar_window_set_current_directory (window, music_file);
++      g_object_unref (G_OBJECT (music_file));
++
++    }
++
++  /* display an error dialog if something went wrong */
++  if (G_UNLIKELY (error != NULL))
++    {
++      thunar_dialogs_show_error (GTK_WIDGET (window), error, _("Failed to open the music folder"));
++      g_error_free (error);
++    }
++
++  /* release our reference on the ~/Music path */
++  thunar_vfs_path_unref (music_path);
++
++  if (G_UNLIKELY(was_user_music_dir_found == FALSE))
++    g_free(music_dir);
++}
++
++static void
++thunar_window_action_open_pictures (GtkAction    *action,
++                                     ThunarWindow *window)
++{
++  ThunarVfsPath *home_path;
++  ThunarVfsPath *pictures_path;
++  ThunarFile    *pictures_file = NULL;
++  GError        *error = NULL;
++  gchar         *absolute_path;
++  gboolean      was_user_picture_dir_found = TRUE;
++  const gchar   *picture_dir=g_get_user_special_dir(G_USER_DIRECTORY_PICTURES);
+ 
++  _thunar_return_if_fail (GTK_IS_ACTION (action));
++  _thunar_return_if_fail (THUNAR_IS_WINDOW (window));
++
++  /* determine the path to the ~/Pictures folder */
++  home_path = thunar_vfs_path_get_for_home ();
++  if (G_UNLIKELY (picture_dir == NULL)) {
++    was_user_picture_dir_found = FALSE;
++    pictures_path =  thunar_vfs_path_relative (home_path, "Pictures");
++  } else {
++    pictures_path = thunar_vfs_path_new(picture_dir, &error);
++  
++    if (G_UNLIKELY (error != NULL))
++      pictures_path =  thunar_vfs_path_relative (home_path, "Pictures");
++  }
++
++  thunar_vfs_path_unref (home_path);
++
++  /* make sure that the ~/Pictures folder exists */
++  absolute_path = thunar_vfs_path_dup_string (pictures_path);
++  xfce_mkdirhier (absolute_path, 0755, &error);
++  g_free (absolute_path);
++
++  /* determine the file for the ~/Pictures path */
++  if (G_LIKELY (error == NULL))
++    pictures_file = thunar_file_get_for_path (pictures_path, &error);
++
++  /* open the ~/Pictures folder */
++  if (G_LIKELY (pictures_file != NULL))
++    {
++      /* go to the ~/Pictures folder */
++      thunar_window_set_current_directory (window, pictures_file);
++      g_object_unref (G_OBJECT (pictures_file));
++
++    }
++
++  /* display an error dialog if something went wrong */
++  if (G_UNLIKELY (error != NULL))
++    {
++      thunar_dialogs_show_error (GTK_WIDGET (window), error, _("Failed to open the pictures folder"));
++      g_error_free (error);
++    }
++
++  /* release our reference on the ~/Pictures path */
++  thunar_vfs_path_unref (pictures_path);
++
++  if (G_UNLIKELY(was_user_picture_dir_found == FALSE))
++    g_free(picture_dir);
++}
++
++static void
++thunar_window_action_open_public (GtkAction    *action,
++                                     ThunarWindow *window)
++{
++  ThunarVfsPath *home_path;
++  ThunarVfsPath *public_path;
++  ThunarFile    *public_file = NULL;
++  GError        *error = NULL;
++  gchar         *absolute_path;
++  gboolean      was_user_public_dir_found = TRUE;
++  const gchar   *public_dir=g_get_user_special_dir(G_USER_DIRECTORY_PUBLIC_SHARE);
++
++  _thunar_return_if_fail (GTK_IS_ACTION (action));
++  _thunar_return_if_fail (THUNAR_IS_WINDOW (window));
++
++  /* determine the path to the ~/Public folder */
++  home_path = thunar_vfs_path_get_for_home ();
++  if (G_UNLIKELY (public_dir == NULL)) {
++    was_user_public_dir_found = FALSE;
++    public_path =  thunar_vfs_path_relative (home_path, "Public");
++  } else {
++    public_path = thunar_vfs_path_new(public_dir, &error);
++  
++    if (G_LIKELY (error != NULL))
++      public_path =  thunar_vfs_path_relative (home_path, "Public");
++  }
++
++  thunar_vfs_path_unref (home_path);
++
++  /* make sure that the ~/Public folder exists */
++  absolute_path = thunar_vfs_path_dup_string (public_path);
++  xfce_mkdirhier (absolute_path, 0755, &error);
++  g_free (absolute_path);
++
++  /* determine the file for the ~/Public path */
++  if (G_LIKELY (error == NULL))
++    public_file = thunar_file_get_for_path (public_path, &error);
++
++  /* open the ~/Public folder */
++  if (G_LIKELY (public_file != NULL))
++    {
++      /* go to the ~/Public folder */
++      thunar_window_set_current_directory (window, public_file);
++      g_object_unref (G_OBJECT (public_file));
++
++    }
++
++  /* display an error dialog if something went wrong */
++  if (G_UNLIKELY (error != NULL))
++    {
++      thunar_dialogs_show_error (GTK_WIDGET (window), error, _("Failed to open the public folder"));
++      g_error_free (error);
++    }
++
++  /* release our reference on the ~/Public path */
++  thunar_vfs_path_unref (public_path);
++
++  if (G_UNLIKELY(was_user_public_dir_found == FALSE))
++    g_free(public_dir);
++}
+ 
+ static void
+ thunar_window_action_open_templates (GtkAction    *action,
+@@ -1806,13 +2195,25 @@ thunar_window_action_open_templates (Gtk
+   gboolean       show_about_templates;
+   GError        *error = NULL;
+   gchar         *absolute_path;
++  gboolean      was_user_templates_dir_found = TRUE;
++  const gchar *templates_dir=g_get_user_special_dir(G_USER_DIRECTORY_TEMPLATES);
+ 
+   _thunar_return_if_fail (GTK_IS_ACTION (action));
+   _thunar_return_if_fail (THUNAR_IS_WINDOW (window));
+ 
+   /* determine the path to the ~/Templates folder */
+   home_path = thunar_vfs_path_get_for_home ();
+-  templates_path = thunar_vfs_path_relative (home_path, "Templates");
++
++  if (G_UNLIKELY (templates_dir == NULL)) {
++    was_user_templates_dir_found = FALSE;
++    templates_path =  thunar_vfs_path_relative (home_path, "Templates");
++  } else {
++    templates_path = thunar_vfs_path_new(templates_dir, &error);
++  
++    if (G_UNLIKELY (error != NULL))
++      templates_path =  thunar_vfs_path_relative (home_path, "Templates");
++  }
++
+   thunar_vfs_path_unref (home_path);
+ 
+   /* make sure that the ~/Templates folder exists */
+@@ -1895,9 +2296,72 @@ thunar_window_action_open_templates (Gtk
+ 
+   /* release our reference on the ~/Templates path */
+   thunar_vfs_path_unref (templates_path);
++
++  if (G_UNLIKELY(was_user_templates_dir_found == FALSE))
++    g_free(templates_dir);
+ }
+ 
++static void
++thunar_window_action_open_videos (GtkAction    *action,
++                                     ThunarWindow *window)
++{
++  ThunarVfsPath *home_path;
++  ThunarVfsPath *videos_path;
++  ThunarFile    *videos_file = NULL;
++  GError        *error = NULL;
++  gchar         *absolute_path;
++  gboolean      was_user_video_dir_found = TRUE;
++  const gchar   *video_dir=g_get_user_special_dir(G_USER_DIRECTORY_VIDEOS);
++
++  _thunar_return_if_fail (GTK_IS_ACTION (action));
++  _thunar_return_if_fail (THUNAR_IS_WINDOW (window));
++
++  /* determine the path to the ~/Videos folder */
++  home_path = thunar_vfs_path_get_for_home ();
++
++  if (G_UNLIKELY (video_dir == NULL)) {
++    was_user_video_dir_found = FALSE;
++    videos_path =  thunar_vfs_path_relative (home_path, "Videos");
++  } else {
++    videos_path = thunar_vfs_path_new(video_dir, &error);
++  
++    if (G_LIKELY (error != NULL))
++      videos_path =  thunar_vfs_path_relative (home_path, "Videos");
++  }
++
++  thunar_vfs_path_unref (home_path);
++
++  /* make sure that the ~/Videos folder exists */
++  absolute_path = thunar_vfs_path_dup_string (videos_path);
++  xfce_mkdirhier (absolute_path, 0755, &error);
++  g_free (absolute_path);
++
++  /* determine the file for the ~/Videos path */
++  if (G_LIKELY (error == NULL))
++    videos_file = thunar_file_get_for_path (videos_path, &error);
++
++  /* open the ~/Videos folder */
++  if (G_LIKELY (videos_file != NULL))
++    {
++      /* go to the ~/Videos folder */
++      thunar_window_set_current_directory (window, videos_file);
++      g_object_unref (G_OBJECT (videos_file));
++
++    }
+ 
++  /* display an error dialog if something went wrong */
++  if (G_UNLIKELY (error != NULL))
++    {
++      thunar_dialogs_show_error (GTK_WIDGET (window), error, _("Failed to open the videos folder"));
++      g_error_free (error);
++    }
++
++  /* release our reference on the ~/Videos path */
++  thunar_vfs_path_unref (videos_path);
++
++  if (G_UNLIKELY(was_user_video_dir_found == FALSE))
++    g_free(video_dir);
++}
+ 
+ static void
+ thunar_window_action_open_trash (GtkAction    *action,
+diff -Naurp Thunar-0.9.0.bak/thunar/thunar-window-ui.h Thunar-0.9.0/thunar/thunar-window-ui.h
+--- Thunar-0.9.0.bak/thunar/thunar-window-ui.h	2007-12-02 14:48:11.000000000 +0100
++++ Thunar-0.9.0/thunar/thunar-window-ui.h	2008-08-29 23:12:54.000000000 +0200
+@@ -1,4 +1,4 @@
+-/* automatically generated from ./thunar-window-ui.xml */
++/* automatically generated from thunar-window-ui.xml */
+ #ifdef __SUNPRO_C
+ #pragma align 4 (thunar_window_ui)
+ #endif
+@@ -8,47 +8,66 @@ static const char thunar_window_ui[] __a
+ static const char thunar_window_ui[] =
+ #endif
+ {
+-  "<ui><menubar name=\"main-menu\"><menu action=\"file-menu\"><menuitem ac"
+-  "tion=\"open-new-window\" /><placeholder name=\"placeholder-create-actio"
+-  "ns\" /><separator /><placeholder name=\"placeholder-launcher\" /><separ"
+-  "ator /><menu action=\"sendto-menu\"><placeholder name=\"placeholder-sen"
+-  "dto-sidepane\" /><placeholder name=\"placeholder-sendto-actions\" /></m"
+-  "enu><separator /><placeholder name=\"placeholder-file-properties\" /><s"
+-  "eparator /><menuitem action=\"empty-trash\" /><separator /><menuitem ac"
+-  "tion=\"close-all-windows\" /><menuitem action=\"close\" /></menu><menu "
+-  "action=\"edit-menu\"><placeholder name=\"placeholder-edit-clipboard-act"
+-  "ions\" /><separator /><placeholder name=\"placeholder-edit-select-actio"
+-  "ns\" /><separator /><placeholder name=\"placeholder-edit-alter-actions\""
+-  " /><separator /><placeholder name=\"placeholder-custom-preferences\" />"
+-  "<menuitem action=\"preferences\" /></menu><menu action=\"view-menu\"><m"
+-  "enuitem action=\"reload\" /><separator /><menu action=\"view-location-s"
+-  "elector-menu\"><menuitem action=\"view-location-selector-pathbar\" /><m"
+-  "enuitem action=\"view-location-selector-toolbar\" /></menu><menu action"
+-  "=\"view-side-pane-menu\"><menuitem action=\"view-side-pane-shortcuts\" "
+-  "/><menuitem action=\"view-side-pane-tree\" /></menu><menuitem action=\""
+-  "view-statusbar\" /><separator /><menuitem action=\"show-hidden\" /><sep"
+-  "arator /><placeholder name=\"placeholder-view-items-actions\" /><separa"
+-  "tor /><menuitem action=\"zoom-in\" /><menuitem action=\"zoom-out\" /><m"
+-  "enuitem action=\"zoom-reset\" /><separator /><menuitem action=\"view-as"
+-  "-icons\" /><menuitem action=\"view-as-detailed-list\" /><menuitem actio"
+-  "n=\"view-as-compact-list\" /></menu><menu action=\"go-menu\"><menuitem "
+-  "action=\"open-parent\" /><menuitem action=\"back\" /><menuitem action=\""
+-  "forward\" /><separator /><menuitem action=\"open-home\" /><menuitem act"
+-  "ion=\"open-trash\" /><menuitem action=\"open-templates\" /><menuitem ac"
+-  "tion=\"open-location\" /></menu><menu action=\"help-menu\"><menuitem ac"
+-  "tion=\"contents\" /><menuitem action=\"about\" /></menu></menubar><popu"
+-  "p action=\"file-context-menu\"><placeholder name=\"placeholder-launcher"
+-  "\" /><separator /><menu action=\"sendto-menu\"><placeholder name=\"plac"
+-  "eholder-sendto-sidepane\" /><placeholder name=\"placeholder-sendto-acti"
+-  "ons\" /></menu><separator /><placeholder name=\"placeholder-clipboard-a"
+-  "ctions\" /><separator /><placeholder name=\"placeholder-edit-actions\" "
+-  "/><separator /><placeholder name=\"placeholder-custom-actions\" /><sepa"
+-  "rator /><placeholder name=\"placeholder-file-actions\" /></popup><toolb"
+-  "ar name=\"location-toolbar\"><toolitem action=\"back\" /><toolitem acti"
+-  "on=\"forward\" /><toolitem action=\"open-parent\" /><toolitem action=\""
+-  "reload\" /><separator /><toolitem action=\"open-home\" /></toolbar></ui"
+-  ">"
++  "<ui>\n\n  <!--\n    $Id: thunar-window-ui.xml 26421 2007-12-02 13:46:28"
++  "Z benny $\n\n    Copyright (c) 2005-2006 Benedikt Meurer <benny@xfce.or"
++  "g>\n\n    Thunar main window user interface description file. Do NOT\n "
++  "   simply edit this file if you don\'t know how the whole system\n    w"
++  "orks, because it\'s too easy to break something.\n  -->\n\n  <menubar n"
++  "ame=\"main-menu\">\n    <menu action=\"file-menu\">\n      <menuitem ac"
++  "tion=\"open-new-window\" />\n      <placeholder name=\"placeholder-crea"
++  "te-actions\" />\n      <separator />\n      <placeholder name=\"placeho"
++  "lder-launcher\" />\n      <separator />\n      <menu action=\"sendto-me"
++  "nu\">\n        <placeholder name=\"placeholder-sendto-sidepane\" />\n  "
++  "      <placeholder name=\"placeholder-sendto-actions\" />\n      </menu"
++  ">\n      <separator />\n      <placeholder name=\"placeholder-file-prop"
++  "erties\" />\n      <separator />\n      <menuitem action=\"empty-trash\""
++  " />\n      <separator />\n      <menuitem action=\"close-all-windows\" "
++  "/>\n      <menuitem action=\"close\" />\n    </menu>\n\n    <menu actio"
++  "n=\"edit-menu\">\n      <placeholder name=\"placeholder-edit-clipboard-"
++  "actions\" />\n      <separator />\n      <placeholder name=\"placeholde"
++  "r-edit-select-actions\" />\n      <separator />\n      <placeholder nam"
++  "e=\"placeholder-edit-alter-actions\" />\n      <separator />\n      <pl"
++  "aceholder name=\"placeholder-custom-preferences\" />\n      <menuitem a"
++  "ction=\"preferences\" />\n    </menu>\n\n    <menu action=\"view-menu\""
++  ">\n      <menuitem action=\"reload\" />\n      <separator />\n      <me"
++  "nu action=\"view-location-selector-menu\">\n        <menuitem action=\""
++  "view-location-selector-pathbar\" />\n        <menuitem action=\"view-lo"
++  "cation-selector-toolbar\" />\n      </menu>\n      <menu action=\"view-"
++  "side-pane-menu\">\n        <menuitem action=\"view-side-pane-shortcuts\""
++  " />\n        <menuitem action=\"view-side-pane-tree\" />\n      </menu>"
++  "\n      <menuitem action=\"view-statusbar\" />\n      <separator />\n  "
++  "    <menuitem action=\"show-hidden\" />\n      <separator />\n      <pl"
++  "aceholder name=\"placeholder-view-items-actions\" />\n      <separator "
++  "/>\n      <menuitem action=\"zoom-in\" />\n      <menuitem action=\"zoo"
++  "m-out\" />\n      <menuitem action=\"zoom-reset\" />\n      <separator "
++  "/>\n      <menuitem action=\"view-as-icons\" />\n      <menuitem action"
++  "=\"view-as-detailed-list\" />\n      <menuitem action=\"view-as-compact"
++  "-list\" />\n    </menu>\n\n    <menu action=\"go-menu\">\n      <menuit"
++  "em action=\"open-parent\" />\n      <menuitem action=\"back\" />\n     "
++  " <menuitem action=\"forward\" />\n      <separator />\n      <menuitem "
++  "action=\"open-home\" />\n      <menuitem action=\"open-trash\" />\n    "
++  "  <menuitem action=\"open-desktop\" />\n      <menuitem action=\"open-d"
++  "ocuments\" />\n      <menuitem action=\"open-downloads\" />\n      <men"
++  "uitem action=\"open-music\" />\n      <menuitem action=\"open-pictures\""
++  " />\n      <menuitem action=\"open-public\" />\n      <menuitem action="
++  "\"open-templates\" />\n      <menuitem action=\"open-videos\" />\n     "
++  " <separator />\n      <menuitem action=\"open-location\" />\n    </menu"
++  ">\n\n    <menu action=\"help-menu\">\n      <menuitem action=\"contents"
++  "\" />\n      <menuitem action=\"about\" />\n    </menu>\n  </menubar>\n"
++  "\n  <popup action=\"file-context-menu\">\n    <placeholder name=\"place"
++  "holder-launcher\" />\n    <separator />\n    <menu action=\"sendto-menu"
++  "\">\n      <placeholder name=\"placeholder-sendto-sidepane\" />\n      "
++  "<placeholder name=\"placeholder-sendto-actions\" />\n    </menu>\n    <"
++  "separator />\n    <placeholder name=\"placeholder-clipboard-actions\" /"
++  ">\n    <separator />\n    <placeholder name=\"placeholder-edit-actions\""
++  " />\n    <separator />\n    <placeholder name=\"placeholder-custom-acti"
++  "ons\" />\n    <separator />\n    <placeholder name=\"placeholder-file-a"
++  "ctions\" />\n  </popup>\n\n  <toolbar name=\"location-toolbar\">\n    <"
++  "toolitem action=\"back\" />\n    <toolitem action=\"forward\" />\n    <"
++  "toolitem action=\"open-parent\" />\n    <toolitem action=\"reload\" />\n"
++  "    <separator />\n    <toolitem action=\"open-home\" />\n  </toolbar>\n"
++  "</ui>\n\n<!-- vi: set ts=2 sw=2 et ai nocindent syntax=xml: -->\n"
+ };
+ 
+-static const unsigned thunar_window_ui_length = 2650u;
++static const unsigned thunar_window_ui_length = 3929u;
+ 
+diff -Naurp Thunar-0.9.0.bak/thunar/thunar-window-ui.xml Thunar-0.9.0/thunar/thunar-window-ui.xml
+--- Thunar-0.9.0.bak/thunar/thunar-window-ui.xml	2007-12-02 14:46:33.000000000 +0100
++++ Thunar-0.9.0/thunar/thunar-window-ui.xml	2008-08-29 23:12:54.000000000 +0200
+@@ -74,7 +74,15 @@
+       <separator />
+       <menuitem action="open-home" />
+       <menuitem action="open-trash" />
++      <menuitem action="open-desktop" />
++      <menuitem action="open-documents" />
++      <menuitem action="open-downloads" />
++      <menuitem action="open-music" />
++      <menuitem action="open-pictures" />
++      <menuitem action="open-public" />
+       <menuitem action="open-templates" />
++      <menuitem action="open-videos" />
++      <separator />
+       <menuitem action="open-location" />
+     </menu>
+ 
