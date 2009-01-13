@@ -1,19 +1,12 @@
 Summary: Thunar File Manager
 Name: Thunar
-Version: 0.9.3
+Version: 0.9.92
 Release: 1%{?dist}
 License: GPLv2+
 URL: http://thunar.xfce.org/
 Source0: http://www.xfce.org/archive/xfce-4.4.2/src/Thunar-%{version}.tar.bz2
 Source1: thunar-sendto-bluetooth.desktop
 Source2: thunar-sendto-audacious-playlist.desktop
-Patch0: thunar-vfs-audio-cd-fix.patch
-# according to http://bugzilla.xfce.org/show_bug.cgi?id=2983 
-# this should be applied, but it isn't =< 0.9.3
-Patch1: thunar-vfs-nozombies.patch
-# send upstream via http://bugzilla.xfce.org/show_bug.cgi?id=4365
-# applied in trunk for 4.6
-Patch2: thunar-0.9.0-xdg-userdir-compat.patch
 Group: User Interface/Desktops
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: fam-devel
@@ -33,6 +26,7 @@ BuildRequires: pkgconfig
 BuildRequires: libxslt
 BuildRequires: GConf2-devel
 BuildRequires: gtk-doc
+BuildRequires: chrpath
 Requires: shared-mime-info
 
 # obsolete xffm to allow for smooth upgrades
@@ -61,9 +55,6 @@ libraries and header files for the Thunar file manager.
 
 %prep
 %setup -q
-%patch0 -p1 -b .vfs-fix
-%patch1 -p0 -b .nozombies
-%patch2 -p1 -b .userdir
 
 # fix icon in thunar-sendto-email.desktop
 sed -i 's!internet-mail!mail-message-new!' \
@@ -92,7 +83,16 @@ chmod 644 examples/xfce-file-manager.py
 rm -f $RPM_BUILD_ROOT/%{_libdir}/*.la
 rm -f $RPM_BUILD_ROOT/%{_libdir}/thunarx-1/*.la
 
+chrpath --delete $RPM_BUILD_ROOT/%{_bindir}/Thunar
+chrpath --delete $RPM_BUILD_ROOT/%{_libexecdir}/thunar-sendto-email
+
 %find_lang Thunar
+
+rm -f ${RPM_BUILD_ROOT}%{_datadir}/applications/thunar-settings.desktop
+desktop-file-install --vendor fedora                            \
+        --dir ${RPM_BUILD_ROOT}%{_datadir}/applications         \
+        --add-category X-Fedora                                 \
+        thunar/thunar-settings.desktop
 
 rm -f ${RPM_BUILD_ROOT}%{_datadir}/applications/Thunar-bulk-rename.desktop
 desktop-file-install --vendor fedora                            \
@@ -154,6 +154,7 @@ fi
 %exclude %{_datadir}/doc/Thunar/ThumbnailersCacheFormat.txt
 %{_bindir}/Thunar
 %{_bindir}/thunar
+%{_bindir}/thunar-settings
 %{_libdir}/libthunar*.so.*
 %dir %{_libdir}/thunarx-1/
 %{_libdir}/thunarx-1/thunar*.so
@@ -169,6 +170,7 @@ fi
 %{_datadir}/Thunar/sendto/*.desktop
 %dir %{_datadir}/thumbnailers
 %{_datadir}/thumbnailers/thunar-vfs-font-thumbnailer-1.desktop
+%{_datadir}/applications/fedora-thunar-settings.desktop
 %{_datadir}/applications/fedora-Thunar-bulk-rename.desktop
 %{_datadir}/applications/fedora-Thunar-folder-handler.desktop
 %{_datadir}/applications/fedora-Thunar.desktop
@@ -196,6 +198,9 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Fri Dec 26 2008 Kevin Fenzi <kevin@tummy.com> - 0.9.92-1
+- Update to 0.9.92
+
 * Mon Oct 27 2008 Christoph Wickert <cwickert@fedoraproject.org> - 0.9.3-1
 - Update to 0.9.3
 - Respect xdg user directory paths (#457740)
