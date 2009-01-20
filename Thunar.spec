@@ -198,8 +198,8 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
-* Tue Jan 13 2009 Kevin Fenzi <kevin@tummy.com> - 4.5.93-1
-- Update to 4.5.93
+* Tue Jan 13 2009 Kevin Fenzi <kevin@tummy.com> - 0.9.93-1
+- Update to 0.9.93
 
 * Fri Dec 26 2008 Kevin Fenzi <kevin@tummy.com> - 0.9.92-1
 - Update to 0.9.92
