@@ -1,10 +1,10 @@
 Summary: Thunar File Manager
 Name: Thunar
-Version: 0.9.99.1
-Release: 2%{?dist}
+Version: 1.0.0
+Release: 1%{?dist}
 License: GPLv2+
 URL: http://thunar.xfce.org/
-Source0: http://www.xfce.org/archive/xfce-4.5.99.1/src/Thunar-%{version}.tar.bz2
+Source0: http://www.xfce.org/archive/xfce-4.6.0/src/Thunar-%{version}.tar.bz2
 Source1: thunar-sendto-bluetooth.desktop
 Source2: thunar-sendto-audacious-playlist.desktop
 Group: User Interface/Desktops
@@ -198,6 +198,9 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Thu Feb 26 2009 Kevin Fenzi <kevin@tummy.com> - 1.0.0-1
+- Update to 1.0.0
+
 * Mon Feb 23 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.9.99.1-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_11_Mass_Rebuild
 
