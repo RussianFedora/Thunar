@@ -1,11 +1,19 @@
 Summary: Thunar File Manager
 Name: Thunar
-Version: 0.9.0
-Release: 4%{?dist}
+Version: 0.9.3
+Release: 1%{?dist}
 License: GPLv2+
 URL: http://thunar.xfce.org/
-Source0: http://www.xfce.org/archive/xfce-4.4.2/src/Thunar-0.9.0.tar.bz2
+Source0: http://www.xfce.org/archive/xfce-4.4.2/src/Thunar-%{version}.tar.bz2
+Source1: thunar-sendto-bluetooth.desktop
+Source2: thunar-sendto-audacious-playlist.desktop
 Patch0: thunar-vfs-audio-cd-fix.patch
+# according to http://bugzilla.xfce.org/show_bug.cgi?id=2983 
+# this should be applied, but it isn't =< 0.9.3
+Patch1: thunar-vfs-nozombies.patch
+# send upstream via http://bugzilla.xfce.org/show_bug.cgi?id=4365
+# applied in trunk for 4.6
+Patch2: thunar-0.9.0-xdg-userdir-compat.patch
 Group: User Interface/Desktops
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: fam-devel
@@ -54,6 +62,17 @@ libraries and header files for the Thunar file manager.
 %prep
 %setup -q
 %patch0 -p1 -b .vfs-fix
+%patch1 -p0 -b .nozombies
+%patch2 -p1 -b .userdir
+
+# fix icon in thunar-sendto-email.desktop
+sed -i 's!internet-mail!mail-message-new!' \
+        plugins/thunar-sendto-email/thunar-sendto-email.desktop.in.in
+
+# second part of the xdg-userdir fixes
+pushd thunar
+exo-csource --name=thunar_window_ui thunar-window-ui.xml > thunar-window-ui.h
+popd
 
 %build
 %configure --enable-dbus --enable-final --enable-xsltproc --enable-gtk-doc
@@ -92,6 +111,15 @@ desktop-file-install --vendor fedora                            \
         --dir ${RPM_BUILD_ROOT}%{_datadir}/applications         \
         --add-category X-Fedora                                 \
         Thunar.desktop
+
+# install additional sendto helpers
+desktop-file-install --vendor ""                                \
+        --dir ${RPM_BUILD_ROOT}%{_datadir}/Thunar/sendto        \
+        %{SOURCE1}
+
+desktop-file-install --vendor ""                                \
+        --dir ${RPM_BUILD_ROOT}%{_datadir}/Thunar/sendto        \
+        %{SOURCE2}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -138,7 +166,7 @@ fi
 %{_libexecdir}/thunar-vfs-update-thumbnailers-cache-1
 %dir %{_datadir}/Thunar/
 %dir %{_datadir}/Thunar/sendto/
-%{_datadir}/Thunar/sendto/thunar-sendto-email.desktop
+%{_datadir}/Thunar/sendto/*.desktop
 %dir %{_datadir}/thumbnailers
 %{_datadir}/thumbnailers/thunar-vfs-font-thumbnailer-1.desktop
 %{_datadir}/applications/fedora-Thunar-bulk-rename.desktop
@@ -147,11 +175,8 @@ fi
 %{_datadir}/dbus-1/services/org.xfce.FileManager.service
 %{_datadir}/dbus-1/services/org.xfce.Thunar.service
 %{_datadir}/doc/Thunar/
-%{_datadir}/icons/hicolor/16x16/apps/Thunar.png
-%{_datadir}/icons/hicolor/16x16/stock/navigation/stock_thunar-shortcuts.png
-%{_datadir}/icons/hicolor/16x16/stock/navigation/stock_thunar-templates.png
-%{_datadir}/icons/hicolor/24x24/apps/Thunar.png
-%{_datadir}/icons/hicolor/48x48/apps/Thunar.png
+%{_datadir}/icons/hicolor/*/apps/Thunar.png
+%{_datadir}/icons/hicolor/16x16/stock/navigation/stock_thunar-*.png
 %{_datadir}/icons/hicolor/scalable/apps/Thunar.svg
 %{_datadir}/pixmaps/Thunar
 %{_datadir}/xfce4/panel-plugins/thunar-tpa.desktop
@@ -171,6 +196,12 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Mon Oct 27 2008 Christoph Wickert <cwickert@fedoraproject.org> - 0.9.3-1
+- Update to 0.9.3
+- Respect xdg user directory paths (#457740)
+- Don't spawn zombies (bugzilla.xfce.org #2983)
+- Add additional sendto helpers for bluethooth and audaciuos (#450784)
+
 * Sat Feb 23 2008 Kevin Fenzi <kevin@tummy.com> - 0.9.0-4
 - Remove requires on xfce-icon-theme. See bug 433152
 
