@@ -1,10 +1,10 @@
 Summary: Thunar File Manager
 Name: Thunar
-Version: 1.0.0
+Version: 1.0.1
 Release: 1%{?dist}
 License: GPLv2+
 URL: http://thunar.xfce.org/
-Source0: http://www.xfce.org/archive/xfce-4.6.0/src/Thunar-%{version}.tar.bz2
+Source0: http://www.xfce.org/archive/xfce-4.6.1/src/Thunar-%{version}.tar.bz2
 Source1: thunar-sendto-bluetooth.desktop
 Source2: thunar-sendto-audacious-playlist.desktop
 Group: User Interface/Desktops
@@ -198,6 +198,9 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Sun Apr 19 2009 Kevin Fenzi <kevin@tummy.com> - 1.0.1-1
+- Update to 1.0.1
+
 * Thu Feb 26 2009 Kevin Fenzi <kevin@tummy.com> - 1.0.0-1
 - Update to 1.0.0
 
