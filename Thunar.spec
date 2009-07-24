@@ -1,7 +1,7 @@
 Summary: Thunar File Manager
 Name: Thunar
 Version: 1.0.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPLv2+
 URL: http://thunar.xfce.org/
 Source0: http://www.xfce.org/archive/xfce-4.6.1/src/Thunar-%{version}.tar.bz2
@@ -198,6 +198,9 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Fri Jul 24 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.0.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild
+
 * Sun Apr 19 2009 Kevin Fenzi <kevin@tummy.com> - 1.0.1-1
 - Update to 1.0.1
 
