@@ -1,7 +1,7 @@
 Summary: Thunar File Manager
 Name: Thunar
 Version: 1.0.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: GPLv2+
 URL: http://thunar.xfce.org/
 Source0: http://www.xfce.org/archive/xfce-4.6.1/src/Thunar-%{version}.tar.bz2
@@ -28,6 +28,7 @@ BuildRequires: GConf2-devel
 BuildRequires: gtk-doc
 BuildRequires: chrpath
 Requires: shared-mime-info
+Requires: dbus-x11
 
 # obsolete xffm to allow for smooth upgrades
 Provides: xffm = 4.2.4
@@ -198,6 +199,9 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Thu Sep 10 2009 Kevin Fenzi <kevin@tummy.com> - 1.0.1-3
+- Require dbus-x11 (#505499)
+
 * Fri Jul 24 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.0.1-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild
 
