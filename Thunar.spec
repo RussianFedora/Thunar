@@ -1,7 +1,9 @@
+%global evo_version 0.3.100
+
 Summary: Thunar File Manager
 Name: Thunar
 Version: 1.0.1
-Release: 3%{?dist}
+Release: 4%{?dist}
 License: GPLv2+
 URL: http://thunar.xfce.org/
 Source0: http://www.xfce.org/archive/xfce-4.6.1/src/Thunar-%{version}.tar.bz2
@@ -14,7 +16,7 @@ BuildRequires: libjpeg-devel
 BuildRequires: libexif-devel
 BuildRequires: libpng-devel >= 2:1.2.2-16
 BuildRequires: desktop-file-utils >= 0.7
-BuildRequires: exo-devel >= 0.3.2
+BuildRequires: exo-devel >= %{exo_version}
 BuildRequires: startup-notification-devel >= 0.4
 BuildRequires: intltool gettext
 BuildRequires: dbus-glib-devel 
@@ -49,7 +51,7 @@ Summary: Development tools for Thunar file manager
 Group: Development/Libraries
 Requires: %{name} = %{version}-%{release}
 Requires: pkgconfig
-Requires: exo-devel >= 0.3.2
+Requires: exo-devel >= %{exo_version}
 
 %description devel
 libraries and header files for the Thunar file manager.
