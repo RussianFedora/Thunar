@@ -1,4 +1,4 @@
-%global evo_version 0.3.100
+%global exo_version 0.3.100
 
 Summary: Thunar File Manager
 Name: Thunar
