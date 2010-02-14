@@ -3,12 +3,14 @@
 Summary: Thunar File Manager
 Name: Thunar
 Version: 1.0.1
-Release: 4%{?dist}
+Release: 5%{?dist}
 License: GPLv2+
 URL: http://thunar.xfce.org/
 Source0: http://www.xfce.org/archive/xfce-4.6.1/src/Thunar-%{version}.tar.bz2
 Source1: thunar-sendto-bluetooth.desktop
 Source2: thunar-sendto-audacious-playlist.desktop
+# Upstream bug: http://bugzilla.xfce.org/show_bug.cgi?id=6232
+Patch0: Thunar-1.0.1-dsofix.patch
 Group: User Interface/Desktops
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: fam-devel
@@ -58,6 +60,8 @@ libraries and header files for the Thunar file manager.
 
 %prep
 %setup -q
+
+%patch0 -p1 
 
 # fix icon in thunar-sendto-email.desktop
 sed -i 's!internet-mail!mail-message-new!' \
@@ -201,6 +205,9 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Sat Feb 13 2010 Kevin Fenzi <kevin@tummy.com> - 1.0.1-4
+- Add patch for DSO linking. Fixes bug #564714
+
 * Thu Sep 10 2009 Kevin Fenzi <kevin@tummy.com> - 1.0.1-3
 - Require dbus-x11 (#505499)
 
