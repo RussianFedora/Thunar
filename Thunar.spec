@@ -3,7 +3,7 @@
 Summary: Thunar File Manager
 Name: Thunar
 Version: 1.0.1
-Release: 6%{?dist}
+Release: 7%{?dist}
 License: GPLv2+
 URL: http://thunar.xfce.org/
 Source0: http://www.xfce.org/archive/xfce-4.6.1/src/Thunar-%{version}.tar.bz2
@@ -210,9 +210,12 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
-* Fri Apr 30 2010 Christoph Wickert <cwickert@fedoraproject.org> - 1.0.1-6
+* Fri Apr 30 2010 Christoph Wickert <cwickert@fedoraproject.org> - 1.0.1-7
 - Require hal-storage-addon
 - Remove obsolete mime types (#587256)
+
+* Thu Apr 15 2010 Kevin Fenzi <kevin@tummy.com> - 1.0.1-6
+- Bump release
 
 * Thu Apr 15 2010 Kevin Fenzi <kevin@tummy.com> - 1.0.1-5
 - Add patch to fix directory umask issue. Fixes bug #579087
