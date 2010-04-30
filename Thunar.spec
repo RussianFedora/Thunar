@@ -139,18 +139,20 @@ rm -rf $RPM_BUILD_ROOT
 %post
 /sbin/ldconfig
 update-desktop-database &> /dev/null ||:
-touch --no-create %{_datadir}/icons/hicolor || :
-if [ -x %{_bindir}/gtk-update-icon-cache ]; then
-   %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
-fi
+touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
 
 %postun
 /sbin/ldconfig
 update-desktop-database &> /dev/null ||:
-touch --no-create %{_datadir}/icons/hicolor || :
-if [ -x %{_bindir}/gtk-update-icon-cache ]; then
-   %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
+if [ $1 -eq 0 ] ; then
+    touch --no-create %{_datadir}/icons/hicolor &>/dev/null
+    gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 fi
+
+%posttrans
+gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
+
+
 
 %files -f Thunar.lang
 %defattr(-,root,root,-)
@@ -213,6 +215,7 @@ fi
 * Fri Apr 30 2010 Christoph Wickert <cwickert@fedoraproject.org> - 1.0.1-7
 - Require hal-storage-addon
 - Remove obsolete mime types (#587256)
+- Update icon-cache scriptlets
 
 * Thu Apr 15 2010 Kevin Fenzi <kevin@tummy.com> - 1.0.1-6
 - Bump release
