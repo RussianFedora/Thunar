@@ -35,6 +35,10 @@ BuildRequires: gtk-doc
 BuildRequires: chrpath
 Requires: shared-mime-info
 Requires: dbus-x11
+# Requires for mounting removable media
+%if 0%{?fedora} <= 13
+Requires:	hal-storage-addon
+%endif
 
 # obsolete xffm to allow for smooth upgrades
 Provides: xffm = 4.2.4
@@ -101,25 +105,23 @@ chrpath --delete $RPM_BUILD_ROOT/%{_libexecdir}/thunar-sendto-email
 rm -f ${RPM_BUILD_ROOT}%{_datadir}/applications/thunar-settings.desktop
 desktop-file-install --vendor fedora                            \
         --dir ${RPM_BUILD_ROOT}%{_datadir}/applications         \
-        --add-category X-Fedora                                 \
         thunar/thunar-settings.desktop
 
 rm -f ${RPM_BUILD_ROOT}%{_datadir}/applications/Thunar-bulk-rename.desktop
 desktop-file-install --vendor fedora                            \
         --dir ${RPM_BUILD_ROOT}%{_datadir}/applications         \
-        --add-category X-Fedora                                 \
         Thunar-bulk-rename.desktop
 
 rm -f ${RPM_BUILD_ROOT}%{_datadir}/applications/Thunar-folder-handler.desktop
 desktop-file-install --vendor fedora                            \
         --dir ${RPM_BUILD_ROOT}%{_datadir}/applications         \
-        --add-category X-Fedora                                 \
+        --remove-mime-type x-directory/gnome-default-handler    \
+        --remove-mime-type x-directory/normal                   \
         Thunar-folder-handler.desktop
 
 rm -f ${RPM_BUILD_ROOT}%{_datadir}/applications/Thunar.desktop
 desktop-file-install --vendor fedora                            \
         --dir ${RPM_BUILD_ROOT}%{_datadir}/applications         \
-        --add-category X-Fedora                                 \
         Thunar.desktop
 
 # install additional sendto helpers
@@ -208,6 +210,10 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Fri Apr 30 2010 Christoph Wickert <cwickert@fedoraproject.org> - 1.0.1-6
+- Require hal-storage-addon
+- Remove obsolete mime types (#587256)
+
 * Thu Apr 15 2010 Kevin Fenzi <kevin@tummy.com> - 1.0.1-5
 - Add patch to fix directory umask issue. Fixes bug #579087
 
