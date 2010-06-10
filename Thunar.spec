@@ -2,17 +2,15 @@
 
 Summary: Thunar File Manager
 Name: Thunar
-Version: 1.0.1
-Release: 6%{?dist}
+Version: 1.0.2
+Release: 1%{?dist}
 License: GPLv2+
 URL: http://thunar.xfce.org/
-Source0: http://www.xfce.org/archive/xfce-4.6.1/src/Thunar-%{version}.tar.bz2
+Source0: http://archive.xfce.org/src/xfce/thunar/1.0/Thunar-%{version}.tar.bz2
 Source1: thunar-sendto-bluetooth.desktop
 Source2: thunar-sendto-audacious-playlist.desktop
 # Upstream bug: http://bugzilla.xfce.org/show_bug.cgi?id=6232
-Patch0: Thunar-1.0.1-dsofix.patch
-# Upstream bug: http://bugzilla.xfce.org/show_bug.cgi?id=3532
-Patch1: Thunar-1.0.1-umask-dir.patch
+Patch0: Thunar-1.0.2-dsofix.patch
 Group: User Interface/Desktops
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: fam-devel
@@ -35,6 +33,10 @@ BuildRequires: gtk-doc
 BuildRequires: chrpath
 Requires: shared-mime-info
 Requires: dbus-x11
+# Requires for mounting removable media
+%if 0%{?fedora} <= 13
+Requires:	hal-storage-addon
+%endif
 
 # obsolete xffm to allow for smooth upgrades
 Provides: xffm = 4.2.4
@@ -63,8 +65,7 @@ libraries and header files for the Thunar file manager.
 %prep
 %setup -q
 
-%patch0 -p1 
-%patch1 -p1 
+%patch0 -p1
 
 # fix icon in thunar-sendto-email.desktop
 sed -i 's!internet-mail!mail-message-new!' \
@@ -101,25 +102,23 @@ chrpath --delete $RPM_BUILD_ROOT/%{_libexecdir}/thunar-sendto-email
 rm -f ${RPM_BUILD_ROOT}%{_datadir}/applications/thunar-settings.desktop
 desktop-file-install --vendor fedora                            \
         --dir ${RPM_BUILD_ROOT}%{_datadir}/applications         \
-        --add-category X-Fedora                                 \
         thunar/thunar-settings.desktop
 
 rm -f ${RPM_BUILD_ROOT}%{_datadir}/applications/Thunar-bulk-rename.desktop
 desktop-file-install --vendor fedora                            \
         --dir ${RPM_BUILD_ROOT}%{_datadir}/applications         \
-        --add-category X-Fedora                                 \
         Thunar-bulk-rename.desktop
 
 rm -f ${RPM_BUILD_ROOT}%{_datadir}/applications/Thunar-folder-handler.desktop
 desktop-file-install --vendor fedora                            \
         --dir ${RPM_BUILD_ROOT}%{_datadir}/applications         \
-        --add-category X-Fedora                                 \
+        --remove-mime-type x-directory/gnome-default-handler    \
+        --remove-mime-type x-directory/normal                   \
         Thunar-folder-handler.desktop
 
 rm -f ${RPM_BUILD_ROOT}%{_datadir}/applications/Thunar.desktop
 desktop-file-install --vendor fedora                            \
         --dir ${RPM_BUILD_ROOT}%{_datadir}/applications         \
-        --add-category X-Fedora                                 \
         Thunar.desktop
 
 # install additional sendto helpers
@@ -137,18 +136,20 @@ rm -rf $RPM_BUILD_ROOT
 %post
 /sbin/ldconfig
 update-desktop-database &> /dev/null ||:
-touch --no-create %{_datadir}/icons/hicolor || :
-if [ -x %{_bindir}/gtk-update-icon-cache ]; then
-   %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
-fi
+touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
 
 %postun
 /sbin/ldconfig
 update-desktop-database &> /dev/null ||:
-touch --no-create %{_datadir}/icons/hicolor || :
-if [ -x %{_bindir}/gtk-update-icon-cache ]; then
-   %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
+if [ $1 -eq 0 ] ; then
+    touch --no-create %{_datadir}/icons/hicolor &>/dev/null
+    gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 fi
+
+%posttrans
+gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
+
+
 
 %files -f Thunar.lang
 %defattr(-,root,root,-)
@@ -208,6 +209,17 @@ fi
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Fri May 21 2010 Kevin Fenzi <kevin@tummy.com> - 1.0.2-1
+- Update to 1.0.2
+
+* Fri Apr 30 2010 Christoph Wickert <cwickert@fedoraproject.org> - 1.0.1-7
+- Require hal-storage-addon
+- Remove obsolete mime types (#587256)
+- Update icon-cache scriptlets
+
+* Thu Apr 15 2010 Kevin Fenzi <kevin@tummy.com> - 1.0.1-6
+- Bump release
+
 * Thu Apr 15 2010 Kevin Fenzi <kevin@tummy.com> - 1.0.1-5
 - Add patch to fix directory umask issue. Fixes bug #579087
 
