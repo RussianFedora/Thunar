@@ -3,7 +3,7 @@
 Summary: Thunar File Manager
 Name: Thunar
 Version: 1.0.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPLv2+
 URL: http://thunar.xfce.org/
 Source0: http://archive.xfce.org/src/xfce/thunar/1.0/Thunar-%{version}.tar.bz2
@@ -34,7 +34,7 @@ BuildRequires: chrpath
 Requires: shared-mime-info
 Requires: dbus-x11
 # Requires for mounting removable media
-%if 0%{?fedora} <= 13
+%if 0%{?fedora} >= 13
 Requires:	hal-storage-addon
 %endif
 
@@ -209,6 +209,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Thu Jun 17 2010 Christoph Wickert <cwickert@fedoraproject.org> - 1.0.2-2
+- Fix conditional requirement for hal-storage-addon
+
 * Fri May 21 2010 Kevin Fenzi <kevin@tummy.com> - 1.0.2-1
 - Update to 1.0.2
 
