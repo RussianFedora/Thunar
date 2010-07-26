@@ -1,0 +1,24 @@
+diff -Nur Thunar-1.0.2.orig/thunar/Makefile.in Thunar-1.0.2/thunar/Makefile.in
+--- Thunar-1.0.2.orig/thunar/Makefile.in	2010-05-21 11:11:02.000000000 -0600
++++ Thunar-1.0.2/thunar/Makefile.in	2010-05-22 00:03:05.000000000 -0600
+@@ -371,7 +371,7 @@
+ INTLTOOL_PERL = @INTLTOOL_PERL@
+ INTLTOOL_UPDATE = @INTLTOOL_UPDATE@
+ LD = @LD@
+-LDFLAGS = @LDFLAGS@
++LDFLAGS = @LDFLAGS@ -lX11
+ LIBFAM_CFLAGS = @LIBFAM_CFLAGS@
+ LIBFAM_LIBS = @LIBFAM_LIBS@
+ LIBFAM_REQUIRED_VERSION = @LIBFAM_REQUIRED_VERSION@
+diff -Nur Thunar-1.0.2.orig/thunar-vfs/Makefile.in Thunar-1.0.2/thunar-vfs/Makefile.in
+--- Thunar-1.0.2.orig/thunar-vfs/Makefile.in	2010-05-21 11:11:02.000000000 -0600
++++ Thunar-1.0.2/thunar-vfs/Makefile.in	2010-05-22 00:03:46.000000000 -0600
+@@ -218,7 +218,7 @@
+ thunar_vfs_font_thumbnailer_1_LINK = $(LIBTOOL) --tag=CC \
+ 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+ 	$(thunar_vfs_font_thumbnailer_1_CFLAGS) $(CFLAGS) \
+-	$(thunar_vfs_font_thumbnailer_1_LDFLAGS) $(LDFLAGS) -o $@
++	$(thunar_vfs_font_thumbnailer_1_LDFLAGS) $(LDFLAGS) -lm -o $@
+ am_thunar_vfs_mime_cleaner_1_OBJECTS =  \
+ 	thunar_vfs_mime_cleaner_1-thunar-vfs-mime-cleaner.$(OBJEXT)
+ thunar_vfs_mime_cleaner_1_OBJECTS =  \
