@@ -3,7 +3,7 @@
 Summary: Thunar File Manager
 Name: Thunar
 Version: 1.0.2
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: GPLv2+
 URL: http://thunar.xfce.org/
 Source0: http://archive.xfce.org/src/xfce/thunar/1.0/Thunar-%{version}.tar.bz2
@@ -11,6 +11,7 @@ Source1: thunar-sendto-bluetooth.desktop
 Source2: thunar-sendto-audacious-playlist.desktop
 # Upstream bug: http://bugzilla.xfce.org/show_bug.cgi?id=6232
 Patch0: Thunar-1.0.2-dsofix.patch
+Patch1: Thunar-1.0.2-drag-n-drop.patch
 Group: User Interface/Desktops
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: fam-devel
@@ -66,6 +67,7 @@ libraries and header files for the Thunar file manager.
 %setup -q
 
 %patch0 -p1
+%patch1 -p1
 
 # fix icon in thunar-sendto-email.desktop
 sed -i 's!internet-mail!mail-message-new!' \
@@ -209,6 +211,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Sat Oct 16 2010 Kevin Fenzi <kevin@tummy.com> - 1.0.2-3
+- Add patch for Drag and drop issue. (#446834)
+
 * Thu Jun 17 2010 Christoph Wickert <cwickert@fedoraproject.org> - 1.0.2-2
 - Fix conditional requirement for hal-storage-addon
 

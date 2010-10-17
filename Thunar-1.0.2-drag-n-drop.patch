@@ -1,0 +1,13 @@
+diff -Nur Thunar-1.0.2.orig/thunar/thunar-standard-view.c Thunar-1.0.2/thunar/thunar-standard-view.c
+--- Thunar-1.0.2.orig/thunar/thunar-standard-view.c	2010-05-21 11:10:52.000000000 -0600
++++ Thunar-1.0.2/thunar/thunar-standard-view.c	2010-10-16 21:59:14.692690575 -0600
+@@ -2866,7 +2866,8 @@
+       else
+         {
+           /* request the drag data from the source */
+-          gtk_drag_get_data (view, context, target, time);
++          if (target != GDK_NONE)
++            gtk_drag_get_data (view, context, target, time);
+         }
+ 
+       /* tell Gdk whether we can drop here */
