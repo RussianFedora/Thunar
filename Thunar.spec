@@ -212,7 +212,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 
 %changelog
 * Sat Oct 16 2010 Kevin Fenzi <kevin@tummy.com> - 1.0.2-3
-- Add patch for Drag and drop issue. (#446834)
+- Add patch for Drag and drop issue. (#633171)
 
 * Thu Jun 17 2010 Christoph Wickert <cwickert@fedoraproject.org> - 1.0.2-2
 - Fix conditional requirement for hal-storage-addon
