@@ -1,0 +1,70 @@
+diff -urN Thunar-1.0.2.orig/plugins/thunar-tpa/thunar-tpa.desktop.in.in Thunar-1.0.2/plugins/thunar-tpa/thunar-tpa.desktop.in.in
+--- Thunar-1.0.2.orig/plugins/thunar-tpa/thunar-tpa.desktop.in.in	2010-10-29 12:46:33.191210297 +0400
++++ Thunar-1.0.2/plugins/thunar-tpa/thunar-tpa.desktop.in.in	2010-10-29 12:52:07.216400231 +0400
+@@ -3,6 +3,6 @@
+ Encoding=UTF-8
+ _Name=Trash Applet
+ _Comment=Display the trash can
+-Icon=gnome-fs-trash-empty
++Icon=user-trash
+ X-XFCE-Exec=@libexecdir@/xfce4/panel-plugins/thunar-tpa
+ 
+diff -urN Thunar-1.0.2.orig/plugins/thunar-tpa/thunar-tpa-icon.c Thunar-1.0.2/plugins/thunar-tpa/thunar-tpa-icon.c
+--- Thunar-1.0.2.orig/plugins/thunar-tpa/thunar-tpa-icon.c	2010-10-29 12:46:33.191210297 +0400
++++ Thunar-1.0.2/plugins/thunar-tpa/thunar-tpa-icon.c	2010-10-29 12:53:31.607479782 +0400
+@@ -175,7 +175,7 @@
+   gtk_widget_show (icon->button);
+ 
+   /* setup the image for the trash icon */
+-  icon->image = gtk_image_new_from_icon_name ("gnome-fs-trash-empty", GTK_ICON_SIZE_BUTTON);
++  icon->image = gtk_image_new_from_icon_name ("user-trash", GTK_ICON_SIZE_BUTTON);
+   gtk_container_add (GTK_CONTAINER (icon->button), icon->image);
+   gtk_widget_show (icon->image);
+ 
+@@ -287,7 +287,7 @@
+   gtk_tooltips_set_tip (icon->tooltips, icon->button, full ? _("Trash contains files") : _("Trash is empty"), NULL);
+ 
+   /* setup the appropriate icon */
+-  gtk_image_set_from_icon_name (GTK_IMAGE (icon->image), full ? "gnome-fs-trash-full" : "gnome-fs-trash-empty", GTK_ICON_SIZE_BUTTON);
++  gtk_image_set_from_icon_name (GTK_IMAGE (icon->image), full ? "user-trash-full" : "user-trash", GTK_ICON_SIZE_BUTTON);
+ 
+   /* apply the new state */
+   icon->full = full;
+diff -urN Thunar-1.0.2.orig/thunar/thunar-application.c Thunar-1.0.2/thunar/thunar-application.c
+--- Thunar-1.0.2.orig/thunar/thunar-application.c	2010-10-29 12:46:33.029204383 +0400
++++ Thunar-1.0.2/thunar/thunar-application.c	2010-10-29 12:51:48.932733027 +0400
+@@ -1549,7 +1549,7 @@
+       path_list.prev = NULL;
+ 
+       /* launch the operation */
+-      thunar_application_launch (application, parent, "gnome-fs-trash-empty",
++      thunar_application_launch (application, parent, "user-trash",
+                                   _("Emptying the Trash..."),
+                                   unlink_stub, &path_list, NULL, NULL);
+ 
+diff -urN Thunar-1.0.2.orig/thunar/thunar-stock.c Thunar-1.0.2/thunar/thunar-stock.c
+--- Thunar-1.0.2.orig/thunar/thunar-stock.c	2010-10-29 12:46:33.018203982 +0400
++++ Thunar-1.0.2/thunar/thunar-stock.c	2010-10-29 12:51:41.612465896 +0400
+@@ -49,8 +49,8 @@
+   { THUNAR_STOCK_HOME,        "gnome-fs-home",          },
+   { THUNAR_STOCK_SHORTCUTS,   "stock_thunar-shortcuts", },
+   { THUNAR_STOCK_TEMPLATES,   "stock_thunar-templates", },
+-  { THUNAR_STOCK_TRASH_EMPTY, "gnome-fs-trash-empty",   },
+-  { THUNAR_STOCK_TRASH_FULL,  "gnome-fs-trash-full",    },
++  { THUNAR_STOCK_TRASH_EMPTY, "user-trash",   },
++  { THUNAR_STOCK_TRASH_FULL,  "user-trash-full",    },
+   { THUNAR_STOCK_DOWNLOADS,   "emblem-downloads",       },
+   { THUNAR_STOCK_DOCUMENTS,   "emblem-documents",       },
+   { THUNAR_STOCK_MUSIC,       "audio-x-generic",        },
+diff -urN Thunar-1.0.2.orig/thunar-vfs/thunar-vfs-io-trash.c Thunar-1.0.2/thunar-vfs/thunar-vfs-io-trash.c
+--- Thunar-1.0.2.orig/thunar-vfs/thunar-vfs-io-trash.c	2010-10-29 12:46:33.069205843 +0400
++++ Thunar-1.0.2/thunar-vfs/thunar-vfs-io-trash.c	2010-10-29 12:51:57.125031977 +0400
+@@ -1119,7 +1119,7 @@
+       info->ctime = mtime;
+       info->mime_info = thunar_vfs_mime_info_ref (_thunar_vfs_mime_inode_directory);
+       info->path = thunar_vfs_path_ref (_thunar_vfs_path_trash_root);
+-      info->custom_icon = g_strdup (empty ? "gnome-fs-trash-empty" : "gnome-fs-trash-full");
++      info->custom_icon = g_strdup (empty ? "user-trash" : "user-trash-full");
+       info->display_name = g_strdup (_("Trash"));
+       info->ref_count = 1;
+     }
