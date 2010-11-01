@@ -3,7 +3,7 @@
 Summary: Thunar File Manager
 Name: Thunar
 Version: 1.0.2
-Release: 3%{?dist}
+Release: 4%{?dist}
 License: GPLv2+
 URL: http://thunar.xfce.org/
 Source0: http://archive.xfce.org/src/xfce/thunar/1.0/Thunar-%{version}.tar.bz2
@@ -12,6 +12,7 @@ Source2: thunar-sendto-audacious-playlist.desktop
 # Upstream bug: http://bugzilla.xfce.org/show_bug.cgi?id=6232
 Patch0: Thunar-1.0.2-dsofix.patch
 Patch1: Thunar-1.0.2-drag-n-drop.patch
+Patch2: Thunar-1.0.2-trash-icon-fix.patch
 Group: User Interface/Desktops
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: fam-devel
@@ -68,6 +69,7 @@ libraries and header files for the Thunar file manager.
 
 %patch0 -p1
 %patch1 -p1
+%patch2 -p1
 
 # fix icon in thunar-sendto-email.desktop
 sed -i 's!internet-mail!mail-message-new!' \
@@ -211,6 +213,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %{_datadir}/gtk-doc/html/*
 
 %changelog
+* Mon Nov 01 2010 Kevin Fenzi <kevin@tummy.com> - 1.0.2-4
+- Add patch for trash icon. (#647734)
+
 * Sat Oct 16 2010 Kevin Fenzi <kevin@tummy.com> - 1.0.2-3
 - Add patch for Drag and drop issue. (#633171)
 
